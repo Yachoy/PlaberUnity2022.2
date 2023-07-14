@@ -1,0 +1,10 @@
+.vs/
+.vsconfig
+Library/
+Logs/
+obj/
+Packages/
+ProjectSettings/
+UserSettings/
+Assembly-CSharp.csproj
+BuilderPlaner.sln
