@@ -119,6 +119,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   header: 
+  owner: SALE
   pathToImg: 
-  autoFindImgByNamePrefab: 1
-  autoSetHeaderByNamePrefab: 1

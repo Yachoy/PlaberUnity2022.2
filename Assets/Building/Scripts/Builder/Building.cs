@@ -110,52 +110,22 @@ public class Building : MonoBehaviour
         _ignoreMask = ~layerMask;
         m_2d = Camera.main.orthographic;
 
-        GetComponent<Menu>().loadPrefabsFromResourcesToSCroll(imgPath, prefabPath);
+        //GetComponent<Menu>().loadPrefabsFromResourcesToSCroll(imgPath, prefabPath);
 
     }
 
+    // идея, возможно, хорошая, однако два ньюанса
+    // 1) момент, когда центры перемекаються, или друг в друге (!canUse)
+    // 2) подредактировать направление итоговых результатов 
+    // 3) дергаеться объект после правок
     Vector3 GetMousePosition()
     {
         Vector3 pos = Vector3.zero;
-
+        Collider col = target.GetComponent<Collider>();
 
         RaycastHit hit;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask)) pos = hit.point;
-
-
-        Vector3 checkSide(Vector3 centerObject, Vector3 direction, GameObject ignoreSelf, float length)
-        {
-            RaycastHit[] hits = Physics.RaycastAll(centerObject, direction, length);
-            foreach (RaycastHit hit in hits)
-            {
-                return hit.point;
-            }
-            return default;
-        }
-
-        Collider col = target.GetComponent<Collider>();
-        Vector3 center = new Vector3(col.bounds.center.x, col.bounds.center.y, col.bounds.center.z);
-        Debug.LogFormat("test- pos: {0} bounds:{1}", target.transform.position.x, col.bounds.center.x);
-        Debug.LogFormat("x+: {0}, x-: {1}, z+: {2}, z-: {3}",
-            checkSide(
-                pos, new Vector3(1, 0, 0),
-                target.gameObject, col.bounds.center.x
-            ),
-            checkSide(
-                pos, new Vector3(-1, 0, 0),
-                target.gameObject, col.bounds.center.x
-            ),
-            checkSide(
-                pos, new Vector3(0, 0, 1),
-                target.gameObject, col.bounds.center.z
-            ),
-            checkSide(
-                pos, new Vector3(0, 0, -1),
-                target.gameObject, col.bounds.center.z
-            )
-        );         
-
 
         if (alignment == Align.Enabled)
         {
@@ -167,7 +137,65 @@ public class Building : MonoBehaviour
         {
             pos.y = pos.y + heightOffset;
         }
+
+        if (!canUse)
+        {
+            //Debug.Log(col.attachedRigidbody);
+        }
+
+
+        Vector3 checkSide(Vector3 centerObject, Vector3 direction, GameObject ignoreSelf, float length)
+        {
+            RaycastHit[] hits = Physics.RaycastAll(centerObject, direction, length);
+            foreach (RaycastHit hite in hits)
+            {
+                return hite.point;
+            }
+            return default;
+        }
         
+        float calculate(Vector3 dir, float length)
+        {
+            Vector3 temp = checkSide(
+                pos, dir,
+                target.gameObject, length
+            );
+            if (temp != Vector3.zero)
+            {
+                // return temp - pos;
+                Vector3 dif = temp - pos;
+                Debug.LogFormat("{0}: test,  length: {1}, dir: {2}", dif, length, dir);
+                if (dir.x != 0)
+                    return length - Mathf.Abs(dif.x) + 0.01f;
+
+
+                if (dir.z != 0)
+                    return length - Mathf.Abs(dif.z) + 0.01f;
+
+
+            }
+            return 0;
+        }
+        
+        float lengthX = target.transform.position.x - col.bounds.min.x;
+        float lengthY = target.transform.position.y - col.bounds.min.y;
+        float lengthZ = target.transform.position.z - col.bounds.min.z;
+
+        float PX = calculate(new Vector3(1, 0, 0), lengthX);
+        float MX = calculate(new Vector3(-1, 0, 0), lengthX);
+        float PZ = calculate(new Vector3(0, 0, 1), lengthZ);
+        float MZ = calculate(new Vector3(0, 0, -1), lengthZ);
+
+        pos -= new Vector3(PX, 0, PZ);
+        pos += new Vector3(MX, 0, MZ);
+
+        Debug.LogFormat("x+: {0}, x-: {1}, z+: {2}, z-: {3}",
+            PX, MX, PZ, MZ
+        );
+
+
+        
+
 
         return pos;
     }
@@ -265,11 +293,11 @@ public class Building : MonoBehaviour
 
     void TargetRotation()
     {
-        if (Input.GetAxis("Mouse ScrollWheel") > 0)
+        if (!Input.GetKey(KeyCode.LeftControl) && Input.GetAxis("Mouse ScrollWheel") > 0)
         {
             target.transform.Rotate(0, 90, 0);
         }
-        else if (Input.GetAxis("Mouse ScrollWheel") < 0)
+        if (!Input.GetKey(KeyCode.LeftControl) && Input.GetAxis("Mouse ScrollWheel") < 0)
         {
             target.transform.Rotate(0, -90, 0);
         }
@@ -303,7 +331,7 @@ public class Building : MonoBehaviour
             if (obj)
             {
                 _lastTarget = Instantiate(obj, target.transform.position, target.transform.rotation) as GameObject;
-               // _lastTarget.gameObject.layer = layerMask.value - 1; // кастыль, но какой
+                _lastTarget.gameObject.layer = layerMask.value - 1; // кастыль, но какой
                 _lastTarget.name = curName;
 
                 AppendObject.Add(new DataObject(

@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 public class CameraMovement : MonoBehaviour
 {
     public float angle = 0f;
-    private float radius = 0.5f;
+    public float radius = 0.5f;
     public float y = 5f;
     [Header("Speed")]
     public float speedRadius = 15f;
@@ -25,7 +25,11 @@ public class CameraMovement : MonoBehaviour
 
     private void Start()
     {
-        angle = 2.323596f;
+        angle = 2.450763f;
+
+        cachedCenter.x = (minRadius + maxRadius)/2;
+        radius = (minRadius + maxRadius) / 2;
+
     }
 
 
@@ -47,12 +51,12 @@ public class CameraMovement : MonoBehaviour
         if (Input.GetKey(KeyCode.D))
             angle += Time.deltaTime * speedRotate;
 
-        if (Input.GetKeyDown(KeyCode.LeftControl) && Input.GetAxis("Mouse ScrollWheel") > 0)
+        if (Input.GetKey(KeyCode.LeftControl) && Input.GetAxis("Mouse ScrollWheel") > 0)
         {
             Camera.main.orthographicSize--;
         }
 
-        if (Input.GetKeyDown(KeyCode.LeftControl) && Input.GetAxis("Mouse ScrollWheel") < 0)
+        if (Input.GetKey(KeyCode.LeftControl) && Input.GetAxis("Mouse ScrollWheel") < 0)
         {
             Camera.main.orthographicSize++;
         }
